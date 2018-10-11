@@ -1,0 +1,16 @@
+#Test commands for CLI
+var stageServer=https://lucidintstage1.unx.sas.com:8443
+var devServer=https://lucidintdev1.unx.sas.com:8443
+
+var c360Regex=c360_de.*
+
+#set server.url ${stageServer}
+#get collection intra.*
+#get collection ${c360Regex}
+
+#get query_pipeline,datasource intra.*
+
+set server.url ${devServer}
+update collection c360_dev
+
+

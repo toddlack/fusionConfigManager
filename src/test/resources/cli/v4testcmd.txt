@@ -1,0 +1,3 @@
+var fusiondev1=fusiondev1.unx.sas.com:8764
+set server.url ${fusiondev1}
+get collection intranet

@@ -1,0 +1,33 @@
+#Test commands for CLI
+var proddServer=https://lucidintprodd1.unx.sas.com:8443
+var stageServer=https://lucidintstage1.unx.sas.com:8443
+var devServer=https://lucidintdev1.unx.sas.com:8443
+var server41=http://d7c004.na.sas.com:8764
+var cdhubRegex=cdhub_.*
+set server.url ${stageServer}
+set authentication.clear snoctl:snoctl123
+#get collection intranet
+get object collection.ids=intranet deep=true
+get datasource,.*pipeline intra.*
+
+#set server.url ${server41}
+#update collection intranet
+#update datasource,query-pipeline intra.*
+
+#set server.url ${devServer}
+#update collection cdhub
+#update collection cdhub_search_tst
+#update .*pipeline cdhub_search_tst
+
+#update QUERY_PIPELINE cd.*
+#update INDEX_PIPELINE cd.*
+#delete query_pipeline cd.*
+
+#get schema cd_hub.*
+#get collection cdhub
+#get object collection.ids=intranet
+#get query_pipeline,datasource,collection intra.*
+#get .*pipeline,datasource,collection .*
+#get collection ${cdhubRegex}
+#get .*pipeline ${cdhubRegex}
+#get .*schedule ${cdhubRegex}

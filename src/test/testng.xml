@@ -1,0 +1,15 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<suite name="Test All">
+    <test name="client">
+        <classes>
+            <class name="com.sas.itq.search.FusionManagerRestClientTest"/>
+            <class name="com.sas.itq.search.configManager.ConfigManagerTest"/>
+        </classes>
+    </test>
+    <test name="utilities">
+        <classes>
+            <class name="com.sas.itq.search.SpreadsheetToJsonTest"/>
+            <class name="com.sas.itq.search.configManager.QueryPipelineTest"/>
+        </classes>
+    </test>
+</suite>
