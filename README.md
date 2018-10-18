@@ -8,7 +8,7 @@ One way to make changes is to use a REST tool like Postman:
 
 This is a manual process that is tedious, but can be setup as a script.
 
-###Better Way
+### Better Way
 We have developed a process that enables us to use development best practices such as version control, and continuous integration on our Fusion configurations.
 
 It is a command line interface for downloading and uploading Fusion objects and collections between servers in order to facilitate development, testing , and versioning of Fusion objects (datasources, query and index pipelines, schedules, jobs, profiles, apps, etc) and SOLR collection configurations.
