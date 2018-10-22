@@ -8,8 +8,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.log4testng.Logger;
-import sun.reflect.generics.tree.VoidDescriptor;
-
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
@@ -23,7 +21,8 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * TODO: Add class javadoc

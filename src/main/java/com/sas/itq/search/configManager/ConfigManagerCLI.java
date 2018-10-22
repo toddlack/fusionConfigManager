@@ -107,8 +107,7 @@ public class ConfigManagerCLI {
     /**
      * Initialize with the command line arguments and apply those arguments
      * over any loaded properties. Command line arguments are the same as the
-     * properties set in the properties file, but have underscores instead of
-     * periods- example :(server_name ==> server.name).
+     * properties set in the properties file.
      *
      * @param args Typically command line style arguments to be parsed by the CLI package.
      */
@@ -174,6 +173,9 @@ public class ConfigManagerCLI {
                 .forEach(opt -> {
                     String option = resolveString(opt.getOpt(),variables);
                     String[] optVals = opt.getValues();
+                    if (optVals == null) {
+                        optVals = new String[0];
+                    }
                     String[] values = new String[optVals.length];
                     for (int i = 0; i < optVals.length; i++) {
                         values[i] = resolveString(optVals[i],variables);
@@ -182,9 +184,9 @@ public class ConfigManagerCLI {
                         boolean ok = false;
                         switch (option) {
                             case COMMAND_SET:
+                                logCmd(commandLine);
                                 Properties p = new Properties();
                                 p.setProperty(values[0], values[1]);
-                                logCmd(commandLine);
                                 //single property set.
                                 setConfigValues(p);
                                 ok = true;
@@ -465,7 +467,7 @@ public class ConfigManagerCLI {
         Option helpCmd = Option.builder(COMMAND_HELP).argName("command").desc("Display Command Line commands").optionalArg(true).build();
         Option loadCmd = Option.builder(COMMAND_LOAD).argName("propertiesFile").desc("Load settings from the specified properties file").optionalArg(true).build();
         Option quitCmd = Option.builder(COMMAND_QUIT).argName("return-code").desc("Quit the command processing").optionalArg(true).build();
-        Option varCmd = Option.builder(COMMAND_VAR).argName("variable assignment  varName=varValue").desc("Assign a variable. use ${varName} in commands to substitute.")
+        Option varCmd = Option.builder(COMMAND_VAR).argName("varName=varValue").desc("Assign a variable. use ${varName} in commands to substitute.")
                 .numberOfArgs(2).valueSeparator('=').build();
         //The verbs are mutually exclusive
         OptionGroup group = new OptionGroup();
@@ -533,7 +535,7 @@ public class ConfigManagerCLI {
         options.addOption(serverUrl);
         options.addOption(index);
         options.addOption(collection);
-        options.addOption(dryRun);
+//        options.addOption(dryRun);
         options.addOption(quiet);
 
         return options;
@@ -542,9 +544,17 @@ public class ConfigManagerCLI {
     public static void usage(Options options) {
         // automatically generate the help statement
         HelpFormatter formatter = new HelpFormatter();
+        formatter.setDescPadding(5);
+
         formatter.setWidth(132);
         String header = "Interface to Fusion configurations - datasources, pipelines, solr, etc. ";
         String footer="Read commands from a command file or piped to stdin";
+        if (options.hasOption(COMMAND_VAR)) {
+            formatter.setLongOptPrefix("");
+            formatter.setOptPrefix("");
+            header=" command syntax for Fusion config manager";
+            footer="Process commands until quit.";
+        }
         formatter.printHelp("configMgr", header,options,footer,true);
     }
 
