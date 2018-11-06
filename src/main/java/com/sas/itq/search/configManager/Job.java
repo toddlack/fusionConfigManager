@@ -19,8 +19,8 @@ public class Job implements IdentifiableString {
     @Override
     public String generateFileName() {
         //resources typically have a "type:"name. Strip off the prefix.
-        String[] processed = getResource().split(":");
-        return processed[processed.length - 1]+JSON;
+        String processed = getResource().replace(":","-");
+        return processed+JSON;
     }
     @Override
     public String generateFileName(String parentDir) {

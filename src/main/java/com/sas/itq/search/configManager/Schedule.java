@@ -1,114 +1,69 @@
 package com.sas.itq.search.configManager;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Calendar;
-import java.util.Map;
+import java.util.List;
 
 /**
  * Schedule object from Fusion
+ * {
+ *   "resource" : "datasource:c360_invoice",
+ *   "enabled" : true,
+ *   "triggers" : [ {
+ *     "type" : "cron",
+ *     "enabled" : true,
+ *     "expression" : "0 0 6 ? * MON-FRI",
+ *     "type" : "cron"
+ *   } ],
+ *   "default" : true
+ * }
  * User: snoctl
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Schedule implements IdentifiableString {
-    String id;
-    String creatorType;
-    String creatorId;
-    Calendar createTime;
-    Calendar startTime;
-    Calendar endTime;
-    String repeatUnit;
-    Integer interval;
-    Boolean active;
-    Map<String, Object> callParams;
+    String resource;
+    Boolean enabled;
+    @JsonProperty("default")
+    Boolean isDefault;
+    List<Trigger> triggers;
 
-    public String getId() {
-        return id;
+    public String getResource() {
+        return resource;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setResource(String resource) {
+        this.resource = resource;
     }
 
-    public String getCreatorType() {
-        return creatorType;
+    public Boolean getEnabled() {
+        return enabled;
     }
 
-    public void setCreatorType(String creatorType) {
-        this.creatorType = creatorType;
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 
-    public String getCreatorId() {
-        return creatorId;
+    public Boolean getDefault() {
+        return isDefault;
     }
 
-    public void setCreatorId(String creatorId) {
-        this.creatorId = creatorId;
+    public void setDefault(Boolean aDefault) {
+        isDefault = aDefault;
     }
 
-    public Calendar getCreateTime() {
-        return createTime;
+    public List<Trigger> getTriggers() {
+        return triggers;
     }
 
-    public void setCreateTime(Calendar createTime) {
-        this.createTime = createTime;
-    }
-
-    public Calendar getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Calendar startTime) {
-        this.startTime = startTime;
-    }
-
-    public String getRepeatUnit() {
-        return repeatUnit;
-    }
-
-    public void setRepeatUnit(String repeatUnit) {
-        this.repeatUnit = repeatUnit;
-    }
-
-    public Integer getInterval() {
-        return interval;
-    }
-
-    public void setInterval(Integer interval) {
-        this.interval = interval;
-    }
-
-    public Calendar getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Calendar endTime) {
-        this.endTime = endTime;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
-
-    public Map<String, Object> getCallParams() {
-        return callParams;
-    }
-
-    public void setCallParams(Map<String, Object> callParams) {
-        this.callParams = callParams;
+    public void setTriggers(List<Trigger> triggers) {
+        this.triggers = triggers;
     }
 
     @Override
     public String generateFileName() {
-        StringBuilder sb = new StringBuilder(getId());
-        //Schedule file names should start with an underscore
-        if (sb.charAt(0) != '_') {
-            sb = new StringBuilder("_").append(getId()).append(JSON);
-        }
+        StringBuilder sb = new StringBuilder(getResource().replace(":","-"))
+                .append(JSON);
         return sb.toString();
     }
     @Override
@@ -122,6 +77,10 @@ public class Schedule implements IdentifiableString {
      */
     @Override
     public String getPathSegmentName() {
-        return getId();
+        return getResource();
+    }
+
+    public String getId() {
+        return getResource();
     }
 }
