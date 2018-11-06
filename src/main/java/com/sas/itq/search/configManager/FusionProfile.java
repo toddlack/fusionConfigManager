@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,30 +26,53 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class FusionProfile extends JsonBased implements IdentifiableString{
 
+    protected static final String COLLECTION = "collection";
+    protected static final String ID = "id";
+    protected static final String PIPELINE = "pipeline";
+    protected static final String SEARCH_HANDLER = "searchHandler";
+
+    public FusionProfile() {
+        super();
+    }
+
+    public FusionProfile(Map<String,String> initVals) {
+        this();
+        this.setCollection(initVals.get(COLLECTION));
+        this.setId(initVals.get(ID));
+        this.setPipeline(initVals.get(PIPELINE));
+    }
+
     @JsonProperty
     public String getCollection() {
-        return String.valueOf(properties.get("collection"));
+        return String.valueOf(properties.get(COLLECTION));
     }
 
     public void setCollection(String val) {
-        set("collection",val);
+        set(COLLECTION,val);
     }
 
     @JsonProperty
     public String getId() {
-        return String.valueOf(properties.get("id"));
+        return String.valueOf(properties.get(ID));
     }
 
     public void setId(String id) {
-        set("id",id);
+        set(ID,id);
     }
 
     @JsonProperty
     public String getPipeline() {
-        return String.valueOf(properties.get("pipeline"));
+        return String.valueOf(properties.get(PIPELINE));
     }
     public void setPipeline(String val) {
-        set("pipeline",val);
+        set(PIPELINE,val);
+    }
+    @JsonProperty
+    public String getSearchHandler() {
+        return String.valueOf(properties.get(SEARCH_HANDLER));
+    }
+    public void setSearchHandler(String val) {
+        set(SEARCH_HANDLER,val);
     }
     @Override
     public String generateFileName() {
@@ -69,7 +91,7 @@ public abstract class FusionProfile extends JsonBased implements IdentifiableStr
      * an Objects API call.
      * @return
      */
-    public abstract  String getProfileType();
+    public  abstract String getProfileType();
 
     /**
      * Return a string that is the PATH segment for a get or PUT. Sometimes it is ID , sometimes name
