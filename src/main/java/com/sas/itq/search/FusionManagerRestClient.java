@@ -16,26 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
 import javax.ws.rs.container.DynamicFeature;
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
+import javax.ws.rs.core.*;
+import java.io.*;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -56,8 +40,9 @@ public class FusionManagerRestClient implements Client {
     public static final String QUERY_PROFILE_BASE="/api/apollo/collections/{1}/query-profiles";
     public static final String INDEX_PROFILE_BASE="/api/apollo/collections/{1}/index-profiles";
     public static final String QUERY_PIPELINES_BASE = "/api/apollo/query-pipelines";
+    public static final String GROUP_BASE = "/api/apollo/groups";
     public static final String INDEX_PIPELINES_BASE = "/api/apollo/index-pipelines";
-    public static final String SCHEDULER_BASE = "/api/apollo/scheduler/schedules";
+    public static final String SCHEDULER_BASE = "/api/apollo/jobs/{1}/schedule";
     public static final String AGGREGATOR_BASE = "/api/apollo/spark/configurations"; //as of v3.1
     public static final String PARSER_BASE = "/api/apollo/parsers";
     public static final String JOB_BASE = "/api/apollo/jobs";
@@ -92,6 +77,7 @@ public class FusionManagerRestClient implements Client {
         classBaseMap.put(Aggregator.class, AGGREGATOR_BASE);
         classBaseMap.put(Parser.class, PARSER_BASE);
         classBaseMap.put(Job.class, JOB_BASE);
+        classBaseMap.put(FusionGroup.class, GROUP_BASE);
         classBaseMap.put(SolrConfigData.class, COLLECTION_SOLR_BASE);
         classBaseMap.put(CollectionFeature.class, COLLECTIONS_FEATURES_BASE);
         classBaseMap.put(SystemInfo.class, SYSINFO_BASE);
@@ -186,6 +172,12 @@ public class FusionManagerRestClient implements Client {
         return results;
     }
 
+    public List<Job> getJobs() {
+        Invocation.Builder invBuilder = getInvocationBuilder(JOB_BASE, "");
+        List<Job> results = getResults(Job.class, invBuilder, MediaType.APPLICATION_JSON_TYPE);
+        return results;
+    }
+
     public List<SystemInfo> getSystemInfo() {
         Invocation.Builder invBuilder = getInvocationBuilder(SYSINFO_BASE, "");
         SystemInfo result = invBuilder.get(SystemInfo.class);
@@ -255,6 +247,39 @@ public class FusionManagerRestClient implements Client {
         List<QueryProfile> results = getResults(QueryProfile.class,invBuilder,MediaType.APPLICATION_JSON_TYPE);
         return results;
     }
+
+    /**
+     * Get the schedule for each job in the list
+     * @param jobs
+     * @return List of schedules
+     */
+    public List<Schedule> getSchedules(List<String> jobs) {
+        List<Schedule> returnList = jobs.stream()
+                .map(job -> getSchedule(job))
+                .collect(Collectors.toList());
+        return returnList;
+    }
+
+//    public List<Schedule> getSchedules(Predicate<JsonNode> jobFilter) {
+//        ObjectMapper mapper = new ObjectMapper();
+//        List<JsonNode> jobs = getAsJsonNodes(Job.class,jobFilter);
+//        List<Job> jobList = jobs.stream()
+//                .map(jsonNode -> {
+//                    Job j = null;
+//                    try {
+//                        j = mapper.readValue(jsonNode.asText(),Job.class);
+//                        return j;
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                    return j;
+//                })
+//                .collect(Collectors.toList());
+//        List<Schedule> returnList = new ArrayList<>();
+//
+//        return returnList;
+//
+//    }
 
     public List<Aggregator> getAggregations() {
         Invocation.Builder invBuilder = getInvocationBuilder(AGGREGATOR_BASE + "/aggregations");
@@ -602,6 +627,9 @@ public class FusionManagerRestClient implements Client {
     public Response updateOrCreate(IndexPipeline source) {
         return updateOrCreate(source, "");
     }
+    public Response updateOrCreate(Job source) {
+        return updateOrCreate(source, "");
+    }
 
 
     public <T> T readEntity(Class<T> entityClass, Response response) {
@@ -663,6 +691,9 @@ public class FusionManagerRestClient implements Client {
     public Response updateOrCreate(IndexPipeline source, String queryParameters) {
         return updateOrCreate(source, queryParameters, IndexPipeline.class);
     }
+    public Response updateOrCreate(Job source, String queryParameters) {
+        return updateOrCreate(source, queryParameters, Job.class);
+    }
 
     public Response checkUpdateOrCreate(IdentifiableString source, WebTarget target, String idPath) {
 
@@ -698,19 +729,15 @@ public class FusionManagerRestClient implements Client {
 
     public Response deleteSchedule(Schedule schedule) {
         String queryParameters = "wt=json";
-        Invocation.Builder invBuilder = getInvocationBuilder(SCHEDULER_BASE + "/" + schedule.getId(), queryParameters);
+        Invocation.Builder invBuilder = getInvocationBuilder(SCHEDULER_BASE.replace("{1}",schedule.getId()),queryParameters);
         Response response = invBuilder.delete();
         return response;
     }
 
-    public Schedule getSchedule(String id) {
+    public Schedule getSchedule(String jobName) {
         String queryParameters = "wt=json";
-        Invocation.Builder invBuilder = getInvocationBuilder(SCHEDULER_BASE + "/" + id, queryParameters);
-        Response response = invBuilder.get();
-        Schedule result = null;
-        if (response.getStatusInfo().getStatusCode() == Response.Status.OK.getStatusCode()) {
-            result = readScheduleFromResponse(response);
-        }
+        Invocation.Builder invBuilder = getInvocationBuilder(SCHEDULER_BASE.replace("{1}",jobName),queryParameters);
+        Schedule result =  invBuilder.get(Schedule.class);
         return result;
 
     }
