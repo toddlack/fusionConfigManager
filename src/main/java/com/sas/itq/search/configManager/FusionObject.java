@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sas.itq.search.configManager.connectors.Datasource;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,12 +42,15 @@ public class FusionObject  {
 
     Map<String,Object> objects ;
     Map<String,Object> metadata;
+    Map<String,Object> variables;
+
     public  static Map<String,Class> objectNames = new HashMap<>();
     List<?> properties;
     Map<String,Object> raw = new HashMap<>();
 
     String filterPolicy=NONE;
     Boolean deep=true;
+
 
     List<Datasource> datasources = new ArrayList<>();
     List<FusionCollection> collections = new ArrayList<>();
@@ -96,6 +101,7 @@ public class FusionObject  {
     public Object set(String name, Object value) {
         return raw.put(name, value);
     }
+
 
     public Map<String, Object> getMetadata() {
         return metadata;
@@ -185,6 +191,7 @@ public class FusionObject  {
      */
     public List<QueryProfile> getQueryProfiles() {
         if (queryProfiles.isEmpty()) {
+            List<QueryProfile> pMap = getProfiles(QueryProfile.class);
             queryProfiles.addAll(getProfiles(QueryProfile.class));
         }
         return queryProfiles;
@@ -192,6 +199,7 @@ public class FusionObject  {
 
     public List<IndexProfile> getIndexProfiles() {
         if (indexProfiles.isEmpty()) {
+            List<IndexProfile> pMap = getProfiles(IndexProfile.class);
             indexProfiles.addAll(getProfiles(IndexProfile.class));
         }
         return indexProfiles;
@@ -205,32 +213,38 @@ public class FusionObject  {
         List<T> retVal = new ArrayList<>();
         String typeName=null;
         try {
-            T base = type.newInstance();
+            Constructor<T> constructor = type.getDeclaredConstructor();
+            T base = constructor.newInstance();
             typeName=base.getProfileType();
+            //Profiles key in the object map are ArrayLists of Maps - each profile is a one entry map,
+            //or name-value pair (profileName --> pipelineName)
+            //For each one, create a new Profile instance from the map and add to return list.
+            Map<String,String> tMap= (Map<String, String>) getObjects().get(typeName);
+//            List<T> tList = (List<T>) getObjects().get(typeName);
+            Constructor<T> constructorMap = type.getDeclaredConstructor(Map.class);
+            for (Map.Entry collectionEntry : tMap.entrySet()) {
+                String curCollection = collectionEntry.getKey().toString();
+                Map<String,String> m1 = (Map<String, String>) collectionEntry.getValue();
+                Map<String,String> profMap = (Map<String, String>) collectionEntry.getValue();
+                for (Map.Entry profileEntry : profMap.entrySet()) {
+                    Map<String,String> initVals=new HashMap<>();
+                    initVals.put(FusionProfile.COLLECTION,curCollection);
+                    initVals.put(FusionProfile.ID,profileEntry.getKey().toString());
+                    initVals.put(FusionProfile.PIPELINE,profileEntry.getValue().toString());
+                    retVal.add(constructorMap.newInstance(initVals));
+                }
+            }
+            //for base(T t: Each(retVal.add(constructor.newInstance(item)));
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
         }
-        Map<String, Map<String, String>> qpMap = (Map) getObjects().get(typeName);
-        //Key is the collection name, v is a Map where key is profile name and value is the
-        //query pipeline name. Profiles belong to a collection.
-        qpMap.forEach((k, v) -> {
-            v.forEach((key1, val1) -> {
-                try {
-                    T profile = type.newInstance();
-                    profile.setId(key1);
-                    profile.setPipeline(val1);
-                    profile.setCollection(k);
-                    retVal.add(profile);
-                } catch (InstantiationException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            });
-        });
-        return retVal;
+       return retVal;
     }
 
     public void setQueryProfiles(List<QueryProfile> queryProfiles) {
@@ -295,7 +309,19 @@ public class FusionObject  {
                 sb.append("ip-");
                 indexPipelines.stream().limit(3).forEach(t-> sb.append(t.getPathSegmentName()).append('-'));
             }
-            externalFileName=sb.deleteCharAt(sb.lastIndexOf("-")).toString();
+            if (!getJobs().isEmpty()) {
+                sb.append("jb-");
+                indexPipelines.stream().limit(3).forEach(t-> sb.append(t.getPathSegmentName()).append('-'));
+            }
+            if (!getSparkJobs().isEmpty()) {
+                sb.append("spk-");
+                indexPipelines.stream().limit(3).forEach(t-> sb.append(t.getPathSegmentName()).append('-'));
+            }
+            if (sb.length()>0) {
+                externalFileName=sb.deleteCharAt(sb.lastIndexOf("-")).toString();
+            } else {
+                externalFileName = sb.toString();
+            }
         }
         return externalFileName;
     }

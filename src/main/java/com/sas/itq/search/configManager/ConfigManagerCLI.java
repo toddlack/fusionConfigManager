@@ -281,6 +281,7 @@ public class ConfigManagerCLI {
                 String[] params = new String[values.length-1];
                 //check for separate files
                 String separateParm="false";
+                String fileNameParm="";
                 int pindex=0;
                 for (int i = 0; i < values.length; i++) {
                     String value = values[i];
@@ -289,13 +290,24 @@ public class ConfigManagerCLI {
                         if (seps.length>1) {
                             separateParm=seps[1];
                         }
+                    } else if (value.toLowerCase().startsWith("filename")) {
+                        String[] fnams = value.split("=");
+                        if (fnams.length>1) {
+                            fileNameParm=fnams[1];
+                        }
                     }  else if (!value.equalsIgnoreCase("object")) {
                         params[pindex++] = value;
                     }
                 }
                 Boolean separate = Boolean.valueOf(separateParm);
-                resultMap = manager.copyFromServer(client,Paths.get(dir),separate,params);
+                resultMap = manager.copyFromServer(client,Paths.get(dir),fileNameParm,separate,params);
             } else {
+                //Change name predicate for Jobs - property to check is 'resource'
+                if (types[0].equals(EntityType.JOB)) {
+                    filter = ConfigManager.nodePredicate(regex,"resource");
+                } else if (types[0].equals(EntityType.GROUP)) {
+                    filter = ConfigManager.nodePredicate(regex,"name");
+                }
                 resultMap = manager.copyFromServer(client, dir, types, "temp", filter);
             }
 
@@ -425,13 +437,13 @@ public class ConfigManagerCLI {
     public void setConfigValues(Properties properties) {
         properties.stringPropertyNames().stream()
                 .forEach(name -> configOptions.setProperty(name, properties.getProperty(name)));
-        String url = properties.getProperty(SERVER_FULL_URL);
-        String authenticationRealm = properties.getProperty(AUTHENTICATION_REALM);
+        String url = configOptions.getProperty(SERVER_FULL_URL);
+        String authenticationRealm = configOptions.getProperty(AUTHENTICATION_REALM);
 
         if (url == null) {
-            String protocol = properties.getProperty(SERVER_PROTOCOL, "https");
-            String server = properties.getProperty(SERVER_NAME);
-            String port = properties.getProperty(SERVER_PORT);
+            String protocol = configOptions.getProperty(SERVER_PROTOCOL, "https");
+            String server = configOptions.getProperty(SERVER_NAME);
+            String port = configOptions.getProperty(SERVER_PORT);
             StringBuilder urlBuild = new StringBuilder();
             if (server!=null) {
                 urlBuild.append(protocol).append("://").append(server);

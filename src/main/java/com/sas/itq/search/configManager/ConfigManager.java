@@ -1,5 +1,6 @@
 package com.sas.itq.search.configManager;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -123,6 +124,7 @@ public class ConfigManager {
         dirMap.put(EntityType.PARSER, DIR_PARSERS);
         dirMap.put(EntityType.SYSINFO, DIR_SERVER_INFO);
         dirMap.put(EntityType.LINK, DIR_LINK);
+        dirMap.put(EntityType.GROUP, DIR_GROUPS);
         dirMap.put(EntityType.OBJECT, DIR_OBJECTS);
         dirMap.put(EntityType.QUERY_PROFILE, DIR_QUERY_PROFILES);
         dirMap.put(EntityType.INDEX_PROFILE, DIR_INDEX_PROFILES);
@@ -167,12 +169,27 @@ public class ConfigManager {
                 case INDEX_PIPELINE:
                 case QUERY_PIPELINE:
                 case PARSER:
-                case JOB:
+                case GROUP:
                 case USER:
                 case AGGREGATION:
                 case SYSINFO:
                 case ROLE:
                     writeStatuses.putAll(writeEntitiesToFile(entityNameMapJson, Paths.get(outputDirectory, pathSection)));
+                    break;
+                case JOB:
+                    //get schedules for each job, too
+                    writeStatuses.putAll(writeEntitiesToFile(entityNameMapJson, Paths.get(outputDirectory, pathSection)));
+                    ObjectMapper mp = new ObjectMapper();
+                    JsonFactory jf = new JsonFactory();
+
+                    List<String> jobs = entityNameMapJson.values().stream()
+                            .map(line -> {
+                                Job j = readJsonToClass(line,Job.class);
+                                return j.getResource();
+                            }).collect(Collectors.toList());
+                    List<Schedule> schedules = client.getSchedules(jobs);
+                    Map<String,Schedule> schedMap = createFileEntityNameMap( schedules, JSON);
+                    writeStatuses.putAll(writeEntitiesToFile(schedMap,Paths.get(outputDirectory,dirMap.get(EntityType.SCHEDULE) )) );
                     break;
                 case SCHEDULE:
                     //we have Schedules in an extra environment folder, specified here.
@@ -213,6 +230,7 @@ public class ConfigManager {
      *
      * @param client
      * @param outputDirectory
+     * @param fileName name of external file to write JSON to, relative to output directory above. If empty, a filename is generated.
      * @param separateFles    If true then write out object tree as separate files for each entity. False - write as one single file for Object
      * @param queryParams     array of strings that are query parameters to send into the /objects/export api
      * @return
@@ -220,12 +238,13 @@ public class ConfigManager {
      * @see https://doc.lucidworks.com/fusion/3.1/REST_API_Reference/Objects-API.html
      */
     public Map<String, Boolean> copyFromServer(FusionManagerRestClient client, Path outputDirectory,
-                                               Boolean separateFles, String... queryParams) throws IOException {
+                                               String fileName, Boolean separateFles, String... queryParams) throws IOException {
         Map<String, Boolean> writeStatuses = new HashMap<>();
         Files.createDirectories(outputDirectory);
         String json = client.getFusionObjectsAsJson(queryParams);
         JsonNode root = client.buildJsonRootNode(json);
         FusionObject obj = FusionObject.loadFromJson(json);
+        obj.setExternalFileName(fileName);
         Map<String, String> nameMap = new LinkedHashMap<>();
 
         if (!separateFles) {
@@ -556,8 +575,9 @@ public class ConfigManager {
         sources.forEach(source -> {
             //we only need to convert to the entity class to generate the filename.
             T entity = readJsonToClass(source, entityType);
-            StringBuilder fileName = new StringBuilder(entity.generateFileName());
-            if (extension != null && !extension.isEmpty()) {
+            String fName=entity.generateFileName();
+            StringBuilder fileName = new StringBuilder(fName);
+            if (extension != null && !extension.isEmpty() && !fName.endsWith(extension)) {
                 fileName.append(".").append(extension);
             }
             entityMap.put(fileName.toString(), source);
@@ -631,6 +651,39 @@ public class ConfigManager {
                 .map(client::updateOrCreate)
                 .collect(Collectors.toList());
         return retList;
+    }
+
+    /**
+     * Use Fusion's Object API to import data from the file system to the server. USes form data, so it is different
+     * from the othe entity API's.
+     * @param client a primed fusion client
+     * @param importFile name of external file that has Object json
+     * @param passwordFile name of external file that has the password substitution
+     * @param policy
+     * @return
+     */
+    public List<Response> updateObject(FusionManagerRestClient client,String importFile, String passwordFile, String policy) {
+        try {
+            String importData = readFromFile(importFile);
+            String passwordData=readFromFile(passwordFile);
+            FusionObject obj = new FusionObject();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        List<Response> retList = new ArrayList<>();
+        StringBuilder qp =  new StringBuilder("importData");
+
+        return retList;
+    }
+
+    private String readFromFile(String filePath) throws IOException {
+        List<String> lines = Files.readAllLines(Paths.get(filePath));
+        StringBuilder sb = new StringBuilder();
+        lines.stream().forEach(line -> {sb.append(line).append("\n");});
+        return sb.toString();
     }
 
     public <T extends IdentifiableString> List<Response> update(FusionManagerRestClient client, List<T> sources, Class<T> entityType) {

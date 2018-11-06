@@ -60,6 +60,12 @@ public enum EntityType {
             return Aggregator.class;
         }
     },
+    GROUP() {
+      @Override
+      public Class classType() {
+          return FusionGroup.class;
+      }
+    },
     JOB() {
         @Override
         public Class classType() {

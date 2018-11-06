@@ -124,7 +124,7 @@ public class ConfigManagerTest {
                 .collect(Collectors.toList());
         List<Role> sources = manager.readConfigSourceFiles(fList, Role.class);
         List<Response> responses = manager.updateRoles(client, sources);
-        String t = client.readEntity(String.class, responses.get(0));
+        String t = responses.get(0).readEntity(String.class);
         assertEquals(responses.size(), sources.size(), "Role responses are not the same number as sources");
 
     }
@@ -144,7 +144,7 @@ public class ConfigManagerTest {
 //        dataSources.get(0).setDescription(" description on " + Instant.now());
         List<Response> responses = manager.updateDataSources(client, dataSources);
         //Should say 'true' for puts.
-        String t = client.readEntity(String.class, responses.get(0));
+        String t =  responses.get(0).readEntity(String.class);
         assertTrue(responses.size() > 1, "No responses");
 
     }
@@ -267,7 +267,7 @@ public class ConfigManagerTest {
         Path outputDirectory=Paths.get(directory);
         client = changeUrl(client, BASE_URL_31_INT_STAGE);
         Boolean separateFiles = Boolean.TRUE;
-        Map<String,Boolean> results = manager.copyFromServer(client,outputDirectory,separateFiles,"collection.ids=intranet","type=datasource,query-pipeline,index-pipeline",
+        Map<String,Boolean> results = manager.copyFromServer(client,outputDirectory,"",separateFiles,"collection.ids=intranet","type=datasource,query-pipeline,index-pipeline",
                 "deep='true'");
         results.forEach((key, value) -> assertTrue(value, "file " + key + " did not get written"));
     }
