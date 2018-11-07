@@ -326,7 +326,7 @@ public class ConfigManagerCLI {
         int rc=0;
         EntityType[] types = parseEntityTypes(values[0]);
         //now get any filters
-        String regex = values[1];
+        String regex = values[1]+".*";
         Predicate<File> filter = file->{return file.getName().matches(regex);};
         String dir = this.configOptions.getProperty(CONFIG_DIRECTORY, DEFAULT_CONFIG_DIRECTORY);
         List<Response> results=null;
