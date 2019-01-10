@@ -214,27 +214,13 @@ public class FusionObject  {
         String typeName=null;
         try {
             Constructor<T> constructor = type.getDeclaredConstructor();
+            Constructor<T> mapConstructor = type.getDeclaredConstructor(Map.class);
             T base = constructor.newInstance();
             typeName=base.getProfileType();
-            //Profiles key in the object map are ArrayLists of Maps - each profile is a one entry map,
-            //or name-value pair (profileName --> pipelineName)
-            //For each one, create a new Profile instance from the map and add to return list.
-            Map<String,String> tMap= (Map<String, String>) getObjects().get(typeName);
-//            List<T> tList = (List<T>) getObjects().get(typeName);
-            Constructor<T> constructorMap = type.getDeclaredConstructor(Map.class);
-            for (Map.Entry collectionEntry : tMap.entrySet()) {
-                String curCollection = collectionEntry.getKey().toString();
-                Map<String,String> m1 = (Map<String, String>) collectionEntry.getValue();
-                Map<String,String> profMap = (Map<String, String>) collectionEntry.getValue();
-                for (Map.Entry profileEntry : profMap.entrySet()) {
-                    Map<String,String> initVals=new HashMap<>();
-                    initVals.put(FusionProfile.COLLECTION,curCollection);
-                    initVals.put(FusionProfile.ID,profileEntry.getKey().toString());
-                    initVals.put(FusionProfile.PIPELINE,profileEntry.getValue().toString());
-                    retVal.add(constructorMap.newInstance(initVals));
-                }
+            List<Map<String,String>> tList = (List<Map<String,String>>) getObjects().get(typeName);
+            for (Map t : tList) {
+                retVal.add(mapConstructor.newInstance(t));
             }
-            //for base(T t: Each(retVal.add(constructor.newInstance(item)));
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -295,7 +281,7 @@ public class FusionObject  {
      * @return the generated filename
      */
     public String getExternalFileName() {
-        if (externalFileName == null) {
+        if (externalFileName == null || externalFileName.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             if(!getCollections().isEmpty()){
                 sb.append("cl-");
