@@ -10,7 +10,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Metadata for Solr config file in a collection
@@ -72,6 +75,26 @@ public class SolrConfigData implements IdentifiableString {
         }
         setParent(file.getParent());
         //todo: load children
+    }
+
+
+    public Map<String,String> loadDirectoryContents(File startDir,Boolean addParent) {
+        Map<String,String> fileContentMap = new LinkedHashMap<>();
+        File[] farr = startDir.listFiles();
+        Arrays.stream(farr)
+                .forEach(f -> {
+                    if (f.isDirectory()) {
+                        fileContentMap.putAll(loadDirectoryContents(f,Boolean.TRUE));
+                    } else {
+                        StringBuilder sb = new StringBuilder();
+                        if (addParent) {
+                            sb.append(startDir.getName()).append("/");
+                        }
+                        sb.append(f.getName());
+                        fileContentMap.put(sb.toString(), readFileContents(f,log));
+                    }
+                });
+        return fileContentMap;
     }
 
 
