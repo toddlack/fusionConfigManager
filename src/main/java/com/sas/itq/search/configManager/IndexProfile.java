@@ -7,11 +7,11 @@ import java.util.Map;
  */
 public class IndexProfile extends FusionProfile{
     public IndexProfile() {
-        super();
+        super(INDEX_PROFILE);
     }
 
     public IndexProfile(Map<String, String> initVals) {
-        super(initVals);
+        super(initVals,INDEX_PROFILE);
     }
 
     @Override

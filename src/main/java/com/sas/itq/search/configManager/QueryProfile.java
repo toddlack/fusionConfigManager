@@ -8,11 +8,10 @@ import java.util.Map;
 public class QueryProfile extends FusionProfile {
 
     public QueryProfile(Map<String,String> initVals) {
-        super(initVals);
-        //this.setSearchHandler(SEARCH_HANDLER); for v4
+        super(initVals,FusionProfile.QUERY_PROFILE);
     }
     public QueryProfile() {
-        super();
+        super(FusionProfile.QUERY_PROFILE);
     }
 
     @Override
