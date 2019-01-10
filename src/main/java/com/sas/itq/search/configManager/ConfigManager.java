@@ -48,6 +48,7 @@ public class ConfigManager {
 
     //These are the names of directories to hold the enity data, as well as the json names in the Object
     //class
+    public static final String DIR_APPS = "apps";
     public static final String DIR_DATASOURCES = "datasources";
     public static final String DIR_INDEX_PIPELINES = "indexPipelines";
     public static final String DIR_QUERY_PIPELINES = "queryPipelines";
@@ -128,6 +129,7 @@ public class ConfigManager {
         dirMap.put(EntityType.OBJECT, DIR_OBJECTS);
         dirMap.put(EntityType.QUERY_PROFILE, DIR_QUERY_PROFILES);
         dirMap.put(EntityType.INDEX_PROFILE, DIR_INDEX_PROFILES);
+        dirMap.put(EntityType.APP, DIR_APPS);
     }
 
     public FusionManagerRestClient getRestClient() {
@@ -167,7 +169,9 @@ public class ConfigManager {
             switch (entityType) {
                 case DATASOURCE:
                 case INDEX_PIPELINE:
+                case INDEX_PROFILE:
                 case QUERY_PIPELINE:
+                case QUERY_PROFILE:
                 case PARSER:
                 case GROUP:
                 case USER:
@@ -199,6 +203,10 @@ public class ConfigManager {
                     break;
                 case COLLECTION:
                     writeStatuses.putAll(copyCollectionsFromServer(client, outputDirectory, nodeFilter));
+                    break;
+                case APP:
+                    //Get the app
+                    writeStatuses.putAll(writeEntitiesToFile(entityNameMapJson, Paths.get(outputDirectory, pathSection)));
                     break;
             }
         }
@@ -424,21 +432,20 @@ public class ConfigManager {
         List<Response> responseList = new LinkedList<>();
         String collectionName = collectionDirectory.getName();
         String collectionFile = collectionName + ".json";
-        File[] farr = collectionDirectory.listFiles();
-        Map<String, String> fileContentMap = new HashMap<>();
-        Arrays.stream(farr)
-                .forEach(f -> {
-                    fileContentMap.put(f.getName(), readFileContents(f));
-                });
+        SolrConfigData solrConfig = new SolrConfigData();
+        Map<String, String> fileContentMap = solrConfig.loadDirectoryContents(collectionDirectory,Boolean.FALSE);
+
         //Create a clean collection for posting, along with a features list. Also remove the collection.json from the map
         FusionCollection fusionCollection = readJsonToClass(fileContentMap.remove(collectionFile), FusionCollection.class);
         List<CollectionFeature> features = fusionCollection.getFeatures();
         Response response = client.updateOrCreate(fusionCollection.clean(), "", FusionCollection.class);
         responseList.add(response);
         //Now update the features -- dynamicSchema was giving problems. Come back to that later.
-        features.stream()
-                .filter(f -> !f.getName().equalsIgnoreCase("dynamicSchema"))
-                .forEach(f -> responseList.add(client.updateOrCreate(f, "")));
+        if (features!=null) {
+            features.stream()
+                    .filter(f -> !f.getName().equalsIgnoreCase("dynamicSchema"))
+                    .forEach(f -> responseList.add(client.updateOrCreate(f, "")));
+        }
 
         //Update the solrconfig, and managed schema first. Then all others.
         String keys[] = {"solrconfig.xml", SolrConfigData.MANAGED_SCHEMA};
@@ -754,6 +761,7 @@ public class ConfigManager {
         }
         return retVal;
     }
+
 
     public String readFileContents(File configFile) {
         return SolrConfigData.readFileContents(configFile, log);

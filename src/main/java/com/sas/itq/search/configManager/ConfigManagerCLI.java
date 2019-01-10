@@ -55,6 +55,7 @@ public class ConfigManagerCLI {
     public static final String PATH_QUERY_PIPELINES = "/api/apollo/query-pipelines";
     public static final String PATH_INDEX_PIPELINES = "/api/apollo/index-pipelines";
     public static final String PATH_OBJECTS = "/api/apollo/objects";
+    public static final String PATH_APPS = "/api/apps";
     public static final String COMMAND_GET = "get";
     public static final String COMMAND_UPDATE = "update";
     public static final String COMMAND_SET = "set";
@@ -152,6 +153,15 @@ public class ConfigManagerCLI {
      * @throws IOException
      */
     public void processCommands() throws IOException {
+        processCommands(getCommandList());
+    }
+
+    public void processCommands(Stream<String> lines) {
+        lines.filter(line -> !line.startsWith("#") && !line.startsWith(" "))
+                .forEach(line -> runSingleCommand(parseCommand(line)));
+    }
+
+    public Stream<String> getCommandList() throws IOException {
         Stream<String> lines = null;
         String cmdPath = sessionCommandLine.getOptionValue(COMMAND_FILE_PATH);
         if (cmdPath == null) {
@@ -160,15 +170,10 @@ public class ConfigManagerCLI {
         } else {
             lines = Files.lines(Paths.get(cmdPath));
         }
-        processCommands(lines);
+        return lines;
     }
 
-    public void processCommands(Stream<String> lines) {
-        lines.filter(line -> !line.startsWith("#") && !line.startsWith(" "))
-                .forEach(line -> runSingleCommand(parseCommand(line)));
-    }
-
-    private void runSingleCommand(CommandLine commandLine) {
+    protected void runSingleCommand(CommandLine commandLine) {
         StreamSupport.stream(Spliterators.spliteratorUnknownSize(commandLine.iterator(), Spliterator.ORDERED), false)
                 .forEach(opt -> {
                     String option = resolveString(opt.getOpt(),variables);
@@ -237,10 +242,10 @@ public class ConfigManagerCLI {
         StringSubstitutor sub = new StringSubstitutor(varMap);
         return sub.replace(templateString);
     }
-    private void logCmd(CommandLine cmd) {
+    protected void logCmd(CommandLine cmd) {
         logCmd(cmd,Optional.empty());
     }
-    private void logCmd(CommandLine commandLine,Optional<String> postMsg) {
+    protected void logCmd(CommandLine commandLine,Optional<String> postMsg) {
         if (!sessionCommandLine.hasOption(QUIET_OUPUT)) {
             Iterator<Option> iter = commandLine.iterator();
             StringBuilder line = new StringBuilder();
@@ -381,10 +386,7 @@ public class ConfigManagerCLI {
     }
 
 
-
     private void buildArgs(Options options, String[] args) {
-
-
         logger.debug("checking command line options.");
         try {
             sessionCommandLine = commandLineParser.parse(options, args);

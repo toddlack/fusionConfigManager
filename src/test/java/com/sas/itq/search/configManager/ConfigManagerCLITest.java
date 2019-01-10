@@ -1,9 +1,12 @@
 package com.sas.itq.search.configManager;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * TODO: Add class javadoc
@@ -14,15 +17,20 @@ import static org.testng.Assert.*;
  */
 public class ConfigManagerCLITest {
 
+    public static final String propsFile = "src/test/resources/cli/test41.properties";
+    ConfigManagerCLI cli;
+
     @BeforeMethod
-    public void setup() {
-
+    public void setup() throws IOException {
+        String[] args={"-pf", "src/test/resources/cli/test41.properties",
+                "-cmf", "src/test/resources/cli/test41cmd.txt"};
+        cli = new ConfigManagerCLI(args);
     }
-    @Test
-    public void testLoadProps() {
-    }
 
     @Test
-    public void testSetConfigValues() {
+    public void testRun() throws IOException {
+        List<String> commands = cli.getCommandList().collect(Collectors.toList());
+        Assert.assertNotNull(commands);
+        cli.processCommands();
     }
 }
