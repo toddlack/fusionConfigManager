@@ -28,18 +28,26 @@ public abstract class FusionProfile extends JsonBased implements IdentifiableStr
 
     protected static final String COLLECTION = "collection";
     protected static final String ID = "id";
-    protected static final String PIPELINE = "pipeline";
+    protected static final String QUERY_PROFILE = "queryProfile";
+    protected static final String INDEX_PROFILE = "indexProfile";
     protected static final String SEARCH_HANDLER = "searchHandler";
+    public String typeName;
 
     public FusionProfile() {
         super();
     }
 
-    public FusionProfile(Map<String,String> initVals) {
+    public FusionProfile(String typeVal) {
         this();
+        typeName=typeVal;
+    }
+    public FusionProfile(Map<String,String> initVals,String typeVal) {
+        this();
+        typeName=typeVal;
         this.setCollection(initVals.get(COLLECTION));
         this.setId(initVals.get(ID));
-        this.setPipeline(initVals.get(PIPELINE));
+        this.setSearchHandler(initVals.get(SEARCH_HANDLER));
+        this.setPipeline(initVals.get(typeName));
     }
 
     @JsonProperty
@@ -62,10 +70,10 @@ public abstract class FusionProfile extends JsonBased implements IdentifiableStr
 
     @JsonProperty
     public String getPipeline() {
-        return String.valueOf(properties.get(PIPELINE));
+        return String.valueOf(properties.get(typeName));
     }
     public void setPipeline(String val) {
-        set(PIPELINE,val);
+        set(typeName,val);
     }
     @JsonProperty
     public String getSearchHandler() {
@@ -76,9 +84,8 @@ public abstract class FusionProfile extends JsonBased implements IdentifiableStr
     }
     @Override
     public String generateFileName() {
-        //Add to collection folder
-        String pathname = Paths.get(getCollection(),
-                getPathSegmentName()+JSON).toString();
+
+        String pathname = Paths.get(getPathSegmentName()+JSON).toString();
         return pathname;
     }
     @Override
