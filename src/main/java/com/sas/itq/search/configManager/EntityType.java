@@ -6,6 +6,12 @@ import com.sas.itq.search.configManager.connectors.Datasource;
  * Enum of all supported fusion/solr entity types
  */
 public enum EntityType {
+    APP() {
+        @Override
+        public Class classType() {
+            return FusionApp.class;
+        }
+    },
     DATASOURCE() {
         @Override
         public Class classType() {
