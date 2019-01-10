@@ -33,12 +33,13 @@ import java.util.stream.StreamSupport;
  */
 public class FusionManagerRestClient implements Client {
     public static final String SOLR_BASE = "/api/apollo/solr";
+    public static final String APP_BASE = "/api/apps";
     public static final String DATASOURCES_BASE = "/api/apollo/connectors/datasources";
     public static final String COLLECTIONS_BASE = "/api/apollo/collections";
     public static final String COLLECTIONS_STATUS_BASE = "/api/apollo/collections/status";
     public static final String COLLECTIONS_FEATURES_BASE = "/api/apollo/collections/{1}/features";
-    public static final String QUERY_PROFILE_BASE="/api/apollo/collections/{1}/query-profiles";
-    public static final String INDEX_PROFILE_BASE="/api/apollo/collections/{1}/index-profiles";
+    public static final String QUERY_PROFILE_BASE="/api/query-profiles";
+    public static final String INDEX_PROFILE_BASE="/api/index-profiles";
     public static final String QUERY_PIPELINES_BASE = "/api/apollo/query-pipelines";
     public static final String GROUP_BASE = "/api/apollo/groups";
     public static final String INDEX_PIPELINES_BASE = "/api/apollo/index-pipelines";
@@ -85,6 +86,7 @@ public class FusionManagerRestClient implements Client {
         classBaseMap.put(FusionObject.class, OBJECTS_BASE);
         classBaseMap.put(QueryProfile.class, QUERY_PROFILE_BASE);
         classBaseMap.put(IndexProfile.class, INDEX_PROFILE_BASE);
+        classBaseMap.put(FusionApp.class, APP_BASE);
 
     }
 
