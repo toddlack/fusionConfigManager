@@ -1,0 +1,18 @@
+var proddServer=https://lucidintprodd1.unx.sas.com:8443
+var stageServer=https://lucidintstage1.unx.sas.com:8443
+var devServer=https://lucidintdev1.unx.sas.com:8443
+var server41=http://d7c004.na.sas.com:8764
+var source-dir=temp/stage
+set authentication.realm na.sas.com
+set authentication.clear username:password
+
+set server.url ${stageServer}
+set config.directory ${source-dir}
+
+#get .*pipeline intranet.*
+#get datasource intra_SASIT_WP
+
+set server.url ${devServer}
+update .*pipeline intranet.*
+update datasource intra_.*
+

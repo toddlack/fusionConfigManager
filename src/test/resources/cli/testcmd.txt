@@ -7,8 +7,10 @@ var cdhubRegex=cdhub_.*
 set server.url ${stageServer}
 set authentication.clear snoctl:snoctl123
 #get collection intranet
-get object collection.ids=intranet deep=true
-get datasource,.*pipeline intra.*
+#get object collection.ids=intranet deep=true separate=true
+update datasource intra_Pune
+#get job c360.*
+#get roles .*
 
 #set server.url ${server41}
 #update collection intranet

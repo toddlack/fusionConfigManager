@@ -1,0 +1,34 @@
+#Test commands for CLI
+var dev1=http://fusiondev1.unx.sas.com:8764
+var stage41=https://fusionintsd1.unx.sas.com:8443
+var dev41=https://fusionintdd1.unx.sas.com:8443
+var local=http://d7c004.na.sas.com:8764
+var stagedir=temp/stage-41
+var devdir=temp/dev-41a
+
+set server.url ${stage41}
+set authentication.clear admin:s3arch4it
+set config.directory ${devdir}
+
+#get app,collection (?i)intranet
+#get collection midas|defects
+#get object collection.ids=defects,midas deep=true separate=true
+#get object collection.ids=defects,midas deep=true
+
+#get app (?i)tracking
+#get collection,index_pipeline,index_profile,query_pipeline midas
+#get collection,index_pipeline,index_profile,query_pipeline defects
+#get parser plain-json
+
+#set server.url ${stage41}
+#update app tracking
+#update index_pipeline midas
+#update parser plain-json
+#update query_.*,collection,index_.* midas
+update collection,index_.*,query_.* defects
+update collection,index_.*,query_.* midas
+
+
+#update index_pipeline defects
+#update collection defects
+#update .*_profile,parser defects.*

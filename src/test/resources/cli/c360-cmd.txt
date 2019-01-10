@@ -1,0 +1,19 @@
+#Test commands for CLI
+var stage=https://lucidintstage1.unx.sas.com:8443
+var prod-r=https://lucidintprodr1.unx.sas.com:8443
+var prod-d=https://lucidintprodd1.unx.sas.com:8443
+var sourcedir=temp/c360r
+
+#set authentication.realm na.sas.com
+set authentication.clear username:password
+set authentication.clear admin:s3arch4it
+set server.url ${prod-d}
+set config.directory ${sourcedir}
+
+#Get the c360 things from stage
+#update collection c360
+#update datasource c360_.*
+
+#update job .*c360.*
+#update schedule .*c360.*
+update query_pipeline c360.*
